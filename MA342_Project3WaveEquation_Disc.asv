@@ -1,0 +1,92 @@
+%% MA342 Project 3 Wave Equation Disc
+clear variables;
+close all;
+clc;
+            
+% Definitions
+r = 1;          % m; radius of disc
+T = 5;         % s; total time duration
+alpha = 2.0;    % ul; laplacian constant this is [H / rho]
+dx = 0.05;      % m; position displacement increment
+dy = dx;
+dt = dx * dy * sqrt(alpha);
+
+x = -r:dx:r;
+y = x;
+
+[X, Y] = meshgrid(x, y);
+Time = unique([0:dt:T, T]);     % define positions to look at
+Sol = zeros(length(X), length(Y), length(Time));
+
+% Initial conditions
+Sol(:, :, 1) = (X.^2 + Y.^2) / 10;
+Sol(:, :, 2) = Sol(:, :, 1);
+
+% Boundary conditions
+for i = 1:length(X)
+    for j = 1:length(Y)
+        if X(i, j)^2 + Y(i, j)^2 > 1
+            Sol(i, j, :) = NaN;
+        end
+    end
+end
+
+% Expanded Laplacian Constant
+r_x = (alpha * dt^2) / dx^2;
+r_y = (alpha * dt^2) / dy^2;
+
+% Index array
+indx = 2:length(X)-1;
+
+for j = 3:length(Time)
+    Sol(indx, indx, j) = ...
+        2*Sol(indx, indx, j-1) ...
+        - Sol(indx, indx, j-2) ...
+        + r_x*(Sol(indx + 1, indx, j-1) - 2*Sol(indx, indx, j-1) + Sol(indx, indx, j-1));
+end
+
+
+
+
+% Iteratives
+
+% Sol = zeros(length(X), length(Y), length(Time));
+
+% % Initial Conditions
+% Sol(:, 2) = (exp(-10*(PosX-(L/2)).^2) - exp(-10*(L/2).^2))*dt;
+% 
+% % NORMALLY we would define boundary conditions here. However, since
+% % they are zero they're already defined in the Sol definition, so
+% % we don't have to do that again.
+% 
+% % Expanded Laplacian Constant
+% r = (alpha*(dt^2))/(dx^2);
+% 
+% % Index array
+% indx = 2:length(PosX)-1; % don't want ends included as they are boundaries
+% 
+% % This iterates through time FOR EVERY position of X
+% for j = 3:length(Time)
+%     Sol(indx, j) = ...
+%         2*Sol(indx, j-1) ...
+%         - Sol(indx, j-2) ...
+%         + r*(Sol(indx+1, j-1) - 2*Sol(indx, j-1) + Sol(indx-1, j-1));
+% end
+% 
+% % In Sol, columns represent the position of x
+% % rows are for each iteration of time
+% 
+% % Movie Creation
+% loops = size(Sol, 1);
+% 
+% % Initialize frames
+% F(loops) = struct('cdata', [], 'colormap', []);
+% 
+% axis tight equal;
+% ax = gca;
+% ax.NextPlot = 'replaceChildren';
+% 
+% for j = 1:loops
+%     plot(PosX, Sol(:, j));
+%     F(j) = getframe(gcf);
+% end
