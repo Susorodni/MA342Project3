@@ -10,6 +10,7 @@ alpha = 2.0;    % ul; laplacian constant this is [H / rho]
 dx = 0.05;      % m; position displacement increment
 dy = dx;
 dt = dx * dy * sqrt(alpha);
+p_val = 10;
 
 x = -r:dx:r;
 y = x;
@@ -19,7 +20,11 @@ Time = unique([0:dt:T, T]);     % define positions to look at
 Sol = zeros(length(X), length(Y), length(Time));
 
 % Initial conditions
-Sol(:, :, 1) = (X.^2 + Y.^2) / 10;
+for i = 1:length(X)
+    for j = 1:length(Y)
+        Sol(i, j, 1) = norm([X(i, j) Y(i, j)], p_val) / 10;
+    end
+end
 Sol(:, :, 2) = Sol(:, :, 1);
 
 % how close the boundary conditions
@@ -31,7 +36,7 @@ boundary_condition = 0.1;
 for i = 1:length(X)
     for j = 1:length(Y)
 
-        d = X(i, j)^2 + Y(i, j)^2;
+        d = norm([X(i, j) Y(i, j)], p_val);
         diff = abs(1 - d);
 
 
