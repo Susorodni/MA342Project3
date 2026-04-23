@@ -10,17 +10,24 @@ alpha = 2.0;    % ul; laplacian constant this is [H / rho]
 dx = 0.05;      % m; position displacement increment
 dy = dx;
 dt = dx * dy * sqrt(alpha);
+p_vals = [3; 5; 10; 100];
 
 x = -r:dx:r;
 y = x;
 
 [X, Y] = meshgrid(x, y);
 Time = unique([0:dt:T, T]);     % define positions to look at
-Sol = zeros(length(X), length(Y), length(Time));
+Sol = zeros(length(X), length(Y), length(Time), length(p_vals));
 
 % Initial conditions
-Sol(:, :, 1) = (X.^2 + Y.^2) / 10;
-Sol(:, :, 2) = Sol(:, :, 1);
+for i = 1:length(X)
+    for j = 1:length(Y)
+        for v = 1:length(p_vals)
+            Sol(i, j, 1, v) = norm([X(i, j) Y(i, j)], p_vals(v)) / 10;
+        end
+    end
+end
+Sol(:, :, 2, :) = Sol(:, :, 1, :);
 
 % how close the boundary conditions
 % should be calculated
@@ -38,7 +45,7 @@ for i = 1:length(X)
 
 
         if diff < boundary_precision || d > 1
-            Sol(i, j, :) = boundary_condition;
+            Sol(i, j, :, :) = boundary_condition;
             ban_list(i, j) = 1;
         end
     end
@@ -57,10 +64,10 @@ for k = 3:length(Time)
     for i = 2:length(X)-1
         for j = 2:length(Y)-1
             if ~ban_list(i, j)
-                Sol(i, j, k) = ...
-                    2*Sol(i, j, k-1) ...
-                    - Sol(i, j, k-2) ...
-                    + r_x*(Sol(i + 1, j, k-1) - 2*Sol(i, j, k-1) + Sol(i - 1, j, k-1)) ...
+                Sol(i, j, k, :) = ...
+                    2*Sol(i, j, k-1, :) ...
+                    - Sol(i, j, k-2, :) ...
+                    + r_x*(Sol(i + 1, j, k-1, :) - 2*Sol(i, j, k-1, :) + Sol(i - 1, j, k-1)) ...
                     + r_y*(Sol(i, j + 1, k-1) - 2*Sol(i, j, k-1) + Sol(i, j - 1, k-1));
             end
         end

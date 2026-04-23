@@ -5,48 +5,53 @@ clc;
             
 % Definitions
 r = 1;          % m; radius of disc
-T = 120;         % s; total time duration
+T = 5;         % s; total time duration
 alpha = 2.0;    % ul; laplacian constant this is [H / rho]
 dx = 0.05;      % m; position displacement increment
 dy = dx;
 dt = dx * dy * sqrt(alpha);
-p_val = 3;
+p_vals = [3; 5; 10; 100];
 
 x = -r:dx:r;
 y = x;
 
 [X, Y] = meshgrid(x, y);
 Time = unique([0:dt:T, T]);     % define positions to look at
-Sol = zeros(length(X), length(Y), length(Time));
+Sol = zeros(length(X), length(Y), length(Time), length(p_vals));
 
 % Initial conditions
 for i = 1:length(X)
     for j = 1:length(Y)
-        Sol(i, j, 1) = norm([X(i, j) Y(i, j)], p_val) / 10;
+        for v = 1:length(p_vals)
+            Sol(i, j, 1, v) = norm([X(i, j) Y(i, j)], p_vals(v)) / 10;
+        end
     end
 end
-Sol(:, :, 2) = Sol(:, :, 1);
+Sol(:, :, 2, :) = Sol(:, :, 1, :);
 
 % how close the boundary conditions
 % should be calculated
-boundary_precision = 0.1;
+boundary_precision = 0.05;
 boundary_condition = 0.1;
+
+ban_list = zeros(length(X), length(Y));
 
 % Boundary conditions
 for i = 1:length(X)
     for j = 1:length(Y)
 
-        d = norm([X(i, j) Y(i, j)], p_val);
+        d = X(i, j)^2 + Y(i, j)^2;
         diff = abs(1 - d);
 
 
-        if diff < boundary_precision
-            Sol(i, j, :) = boundary_condition;
-        elseif d > 1
-            Sol(i, j, :) = boundary_condition;
+        if diff < boundary_precision || d > 1
+            Sol(i, j, :, :) = boundary_condition;
+            ban_list(i, j) = 1;
         end
     end
 end
+
+ban_list = logical(ban_list);
 
 % Expanded Laplacian Constant
 r_x = (alpha * dt^2) / dx^2;
@@ -55,26 +60,56 @@ r_y = (alpha * dt^2) / dy^2;
 % Index array
 indx = 2:length(X)-1;
 
-for j = 3:length(Time)
-    Sol(indx, indx, j) = ...
-        2*Sol(indx, indx, j-1) ...
-        - Sol(indx, indx, j-2) ...
-        + r_x*(Sol(indx + 1, indx, j-1) - 2*Sol(indx, indx, j-1) + Sol(indx - 1, indx, j-1)) ...
-        + r_y*(Sol(indx, indx + 1, j-1) - 2*Sol(indx, indx, j-1) + Sol(indx, indx - 1, j-1));
+for k = 3:length(Time)
+    for i = 2:length(X)-1
+        for j = 2:length(Y)-1
+            if ~ban_list(i, j)
+                Sol(i, j, k, :) = ...
+                    2*Sol(i, j, k-1, :) ...
+                    - Sol(i, j, k-2, :) ...
+                    + r_x*(Sol(i + 1, j, k-1, :) - 2*Sol(i, j, k-1, :) + Sol(i - 1, j, k-1, :)) ...
+                    + r_y*(Sol(i, j + 1, k-1, :) - 2*Sol(i, j, k-1, :) + Sol(i, j - 1, k-1, :));
+            end
+        end
+    end
 end
 
+% Add NaNs to make it look goofdf
+for i = 1:length(X)
+    for j = 1:length(Y)
+        if ban_list(i, j)
+            Sol(i, j, :, :) = NaN;
+        end
+    end
+end
+
+
 % Movie Creation
-loops = size(Sol, 1);
+loops = size(Sol, 3);
 
 % Initialize frames
 F(loops) = struct('cdata', [], 'colormap', []);
 
-% axis tight;
+axis tight manual;
+grid on;
+xlim([-r, r]);
+ylim([-r, r]);
+
+z_max = max(Sol, [], 'all');
+z_min = min(Sol, [], 'all');
+
+zlim([z_min, z_max]);
 ax = gca;
 ax.NextPlot = 'replaceChildren';
 
+num_p_vals = length(p_vals);
+
 for j = 1:loops
-    surf(X, Y, Sol(:, :, j))
-    F(j) = getframe(gcf);
+    for v = 1:length(num_p_vals)
+        figure(v);
+        surf(X, Y, Sol(:, :, j, v))
+        F(j) = getframe(gcf);
+        % exportgraphics(gcf, 'simple_disc.gif', 'Append', true);
+    end
 end
 
