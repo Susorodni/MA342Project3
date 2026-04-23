@@ -10,7 +10,7 @@ alpha = 2.0;    % ul; laplacian constant this is [H / rho]
 dx = 0.05;      % m; position displacement increment
 dy = dx;
 dt = dx * dy * sqrt(alpha);
-p_val = 10;
+p_val = 3;
 
 x = -r:dx:r;
 y = x;
@@ -69,7 +69,7 @@ loops = size(Sol, 1);
 % Initialize frames
 F(loops) = struct('cdata', [], 'colormap', []);
 
-axis tight;
+% axis tight;
 ax = gca;
 ax.NextPlot = 'replaceChildren';
 
