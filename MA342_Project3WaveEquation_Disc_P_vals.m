@@ -10,7 +10,7 @@ alpha = 2.0;    % ul; laplacian constant this is [H / rho]
 dx = 0.05;      % m; position displacement increment
 dy = dx;
 dt = dx * dy * sqrt(alpha);
-p_vals = [3; 5; 10; 100];
+p_vals = [1; 3; 5; 10];
 
 x = -r:dx:r;
 y = x;
@@ -18,6 +18,11 @@ y = x;
 [X, Y] = meshgrid(x, y);
 Time = unique([0:dt:T, T]);     % define positions to look at
 Sol = zeros(length(X), length(Y), length(Time), length(p_vals));
+
+% Movie stuff
+fps = 60;
+total_movie_frames = T * fps;
+movie_snapshot_times = floor(linspace(0, length(Time), total_movie_frames));
 
 % Initial conditions
 for i = 1:length(X)
@@ -99,17 +104,35 @@ z_max = max(Sol, [], 'all');
 z_min = min(Sol, [], 'all');
 
 zlim([z_min, z_max]);
+
 ax = gca;
 ax.NextPlot = 'replaceChildren';
 
 num_p_vals = length(p_vals);
 
 for j = 1:loops
-    for v = 1:length(num_p_vals)
-        figure(v);
-        surf(X, Y, Sol(:, :, j, v))
+
+    for v = 1:num_p_vals
+        figure(1);
+
+        subplot(num_p_vals / 2, num_p_vals / 2, v);
+        surf(X, Y, Sol(:, :, j, v));
+        zlim([z_min, z_max]);
+        title(append("P-Val = ", sprintf('%.0f', p_vals(v))));
         F(j) = getframe(gcf);
+   
         % exportgraphics(gcf, 'simple_disc.gif', 'Append', true);
+
+        % figure(2);
+        % subplot(num_p_vals / 2, num_p_vals / 2, v);
+        % imagesc(x, y, Sol(:, :, j, v));
+        % drawnow;
     end
+
+    sgtitle(append("Disc at t = ", sprintf('%5.4f', Time(j))))
+
+    % if any(j == movie_snapshot_times)
+    %     exportgraphics(gcf, 'disc_p_val.gif', 'Append', true);
+    % end
 end
 

@@ -1,4 +1,5 @@
 %% MA342 Project 3 Wave Equation Disc
+tic
 clear variables;
 close all;
 clc;
@@ -7,7 +8,7 @@ clc;
 r = 1;          % m; radius of disc
 T = 5;         % s; total time duration
 alpha = 2.0;    % ul; laplacian constant this is [H / rho]
-dx = 0.05;      % m; position displacement increment
+dx = 0.04;      % m; position displacement increment
 dy = dx;
 dt = dx * dy * sqrt(alpha);
 
@@ -66,6 +67,7 @@ for k = 3:length(Time)
         end
     end
 end
+toc
 
 % Add NaNs to make it look goofdf
 for i = 1:length(X)
